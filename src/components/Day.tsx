@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { checkIfResizeIsValid, getTime } from "../util/helpers";
 
 type Activity = {
   startTime: number;
@@ -6,57 +7,46 @@ type Activity = {
   name: string;
   id: string;
 };
-const stepSize: number = 15; // Set your desired step size
+const stepSize: number = 25; // Set your desired step size
 type HandleType = "upperhandle" | "lowerhandle";
 const dayStartTime = 1000;
-const dayEndTime = 1000;
 
 function Day() {
   const [activities, setActivities] = useState<Activity[]>([
-    { name: "activity 1", endTime: 1200, startTime: 1150, id: "12" },
+    { name: "activ", endTime: 1200, startTime: 1150, id: "12" },
+    { name: "act", endTime: 1300, startTime: 1250, id: "13" },
   ]);
+  const activitiesAtMouseDown = useRef<Activity[] | null>(null);
+
   const handleMouseDown = (
     event: React.MouseEvent<HTMLDivElement>,
     currentActivity: Activity,
-    handleType: HandleType
+    handleType: HandleType,
+    activitiesFromDOM: Activity[]
   ) => {
     const initialY = event.clientY;
-
+    activitiesAtMouseDown.current = structuredClone(activitiesFromDOM);
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const deltaY = moveEvent.clientY - initialY;
-      if (Math.abs(deltaY) < stepSize) return;
+      const delta = moveEvent.clientY - initialY;
+      const roundedDelta = Math.round(delta / stepSize) * stepSize;
+      if (Math.abs(delta) < stepSize) return;
 
-      const roundedDelta = Math.round(deltaY / stepSize) * stepSize;
-      const updateCurrentActivity = { ...currentActivity };
-
-      if (handleType === "upperhandle") {
-        updateCurrentActivity.startTime =
-          updateCurrentActivity.startTime + roundedDelta;
-      } else {
-        updateCurrentActivity.endTime =
-          updateCurrentActivity.endTime + roundedDelta;
-      }
-      console.log(
-        "endtime:",
-        updateCurrentActivity.endTime,
-        "roundedDelta",
-        roundedDelta
-      );
-      //update state
-      const updatedActivityData = activities.map((a) => {
-        if (a.id !== currentActivity.id) return a;
-        return updateCurrentActivity;
+      const result = checkIfResizeIsValid({
+        activities: [...activitiesFromDOM],
+        currentActivity,
+        handleType,
+        roundedDelta,
+        activitiesAtMouseDown:
+          activitiesAtMouseDown.current || activitiesFromDOM,
       });
-      setActivities(updatedActivityData);
+
+      if (result.valid) {
+        setActivities(result.newActivityData!);
+      }
     };
-    // check if valid
-    // set state if valid
-    // try saving state while checking
-    // if empty space found then valid is true
-    // up down for handles will change start time and end time
-    // will need to keep updating state while dragingg
 
     const handleMouseUp = () => {
+      activitiesAtMouseDown.current = null;
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
@@ -64,12 +54,13 @@ function Day() {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
+
   return (
-    <div className="h-screen">
+    <div className="h-screen select-none">
       {activities?.map((a) => (
         <div
           style={{
-            position: "relative",
+            position: "absolute",
             top: a.startTime - dayStartTime,
             height: a.endTime - a.startTime,
             lineHeight: 1,
@@ -79,15 +70,21 @@ function Day() {
         >
           <div
             className="resize"
-            onMouseDown={(e) => handleMouseDown(e, a, "upperhandle")}
+            onMouseDown={(e) =>
+              handleMouseDown(e, a, "upperhandle", activities)
+            }
           >
             ---
           </div>
+          {getTime(a.startTime)}
           {a.name}
+          {getTime(a.endTime)}
           <div
             style={{ lineHeight: 1, bottom: 0 }}
             className="absolute leading-none resize"
-            onMouseDown={(e) => handleMouseDown(e, a, "lowerhandle")}
+            onMouseDown={(e) =>
+              handleMouseDown(e, a, "lowerhandle", activities)
+            }
           >
             ---
           </div>
