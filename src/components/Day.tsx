@@ -15,6 +15,7 @@ function Day() {
   const [activities, setActivities] = useState<Activity[]>([
     { name: "activ", endTime: 1200, startTime: 1150, id: "12" },
     { name: "act", endTime: 1300, startTime: 1250, id: "13" },
+    { name: "acv", endTime: 1450, startTime: 1400, id: "14" },
   ]);
   const activitiesAtMouseDown = useRef<Activity[] | null>(null);
 
@@ -22,14 +23,17 @@ function Day() {
     event: React.MouseEvent<HTMLDivElement>,
     currentActivity: Activity,
     handleType: HandleType,
-    activitiesFromDOM: Activity[]
+    activitiesFromDOM: Activity[],
   ) => {
     const initialY = event.clientY;
     activitiesAtMouseDown.current = structuredClone(activitiesFromDOM);
+
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const delta = moveEvent.clientY - initialY;
       const roundedDelta = Math.round(delta / stepSize) * stepSize;
-      if (Math.abs(delta) < stepSize) return;
+      // if (Math.abs(delta) < stepSize){
+      //   console.log("delta too small");return;
+      // }
 
       const result = checkIfResizeIsValid({
         activities: [...activitiesFromDOM],
@@ -60,10 +64,11 @@ function Day() {
       {activities?.map((a) => (
         <div
           style={{
+            fontSize: 13,
             position: "absolute",
             top: a.startTime - dayStartTime,
             height: a.endTime - a.startTime,
-            lineHeight: 1,
+            lineHeight: 0.9,
           }}
           key={a.id}
           className="bg-red-600"
