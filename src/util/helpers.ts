@@ -86,11 +86,17 @@ export const checkIfResizeIsValid = ({
       if (idx === 0 && newActivityData[idx].startTime >= dayStartTime) {
         return { valid: true, newActivityData };
       }
+
+      if (updatedDelta < 0) {
+        // we are shrinking the activity
+        if (idx !== 0) {
+          const freeTimeOffset =
+            activitiesAtMouseDown[idx - 1].endTime -
+            activitiesAtMouseDown[idx].startTime;
+          updatedDelta = updatedDelta - freeTimeOffset;
+        }
+      }
     } else {
-      // debugger;
-      //lowerhandle
-      console.log({ roundedDelta, updatedDelta });
-      console.table(newActivityData);
       //lowerhandle so endtime will be modified  of all activities
       newActivityData[idx].endTime =
         activitiesAtMouseDown[idx].endTime + updatedDelta;
@@ -113,7 +119,6 @@ export const checkIfResizeIsValid = ({
         (idx === newActivityData.length - 1 &&
           newActivityData[idx].endTime <= dayEndTime)
       ) {
-        console.log("return");
         return { valid: true, newActivityData };
       }
       //interaction will move activiy beyond dayEndTime so returning as invalid
@@ -129,24 +134,19 @@ export const checkIfResizeIsValid = ({
         idx === newActivityData.length - 1 &&
         newActivityData[idx].endTime <= dayEndTime
       ) {
-        console.log("return");
         return { valid: true, newActivityData };
       }
 
-      console.log("next loop");
       if (updatedDelta > 0) {
         // we are expanding the activity
         if (idx !== newActivityData.length - 1) {
-          console.table(activities);
           const freeTimeOffset =
             activitiesAtMouseDown[idx + 1].startTime -
             activitiesAtMouseDown[idx].endTime;
-          console.log(freeTimeOffset);
           updatedDelta = updatedDelta - freeTimeOffset;
         }
       }
     } //else
-    console.log("loop");
   } //for
   return { valid: false };
 };
