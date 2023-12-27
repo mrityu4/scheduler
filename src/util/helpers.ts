@@ -43,6 +43,9 @@ export const checkIfResizeIsValid = ({
     }
   }
   let updatedDelta = roundedDelta;
+
+  //uncommenting this prevents resizing an event
+  //back to original size without releasing the mouse
   // if (roundedDelta === 0) {
   //   return { valid: false };
   // }
@@ -64,7 +67,11 @@ export const checkIfResizeIsValid = ({
       }
 
       //invalid change happened
-      if (newActivityData[idx].endTime <= newActivityData[idx].startTime) {
+      if (
+        newActivityData[idx].endTime <= newActivityData[idx].startTime ||
+        newActivityData[idx].startTime < dayStartTime ||
+        newActivityData[idx].endTime > dayEndTime
+      ) {
         return { valid: false };
       }
 
@@ -108,7 +115,11 @@ export const checkIfResizeIsValid = ({
       }
 
       //invalid change happened
-      if (newActivityData[idx].endTime <= newActivityData[idx].startTime) {
+      if (
+        newActivityData[idx].endTime <= newActivityData[idx].startTime ||
+        newActivityData[idx].endTime > dayEndTime ||
+        newActivityData[idx].startTime < dayStartTime
+      ) {
         return { valid: false };
       }
       // console.log({ updatedDelta })
